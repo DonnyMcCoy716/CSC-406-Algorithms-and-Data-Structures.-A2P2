@@ -1,0 +1,126 @@
+//Donny McCoy
+//A2P2
+//2/27/19 
+
+
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.Scanner;
+import java.util.Set;
+import org.jgrapht.alg.KruskalMinimumSpanningTree;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.DefaultWeightedEdge;
+import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.graph.SimpleWeightedGraph;
+import org.jgrapht.traverse.DepthFirstIterator;
+
+public class MainMccoy {
+	//Variables for program 
+		static File inputFile ;           // input file 
+		static Set<DefaultWeightedEdge> mstEdges;   // set of edges of min spanning tree 
+		static int nv ; //number of vertices 
+		static SimpleWeightedGraph<Integer, DefaultWeightedEdge> graph ; // graph used to add vertices and edges to 
+		static int[] tour ; // array for storing the tour of vertices hit 
+
+
+	public static void main(String[] args) throws FileNotFoundException {
+		if(args.length !=2) {               							 //if there is not 2 files inputed 
+	      System.out.print("Please input two files");
+	      System.exit(0);} 
+		else {
+	      TimerMccoy Timer = new TimerMccoy();    //creates a new object of timer to use for the method 
+	      Timer.start();     //  start the timer 
+	      inputFile = new File(args[0]); // first item in array is the input 
+	      readInput(); // run read input 
+	      mst(); // run mst method 
+	      depthFirstOrder() ; 
+	      writeTour(args[1]); //run writetour 
+	      Timer.stop();       // stop the timer 
+	      //System.out.print(Timer.TotalTime);   //output the time it took from the timer object  
+		}
+	}
+
+
+	public static void readInput() {
+		Scanner sc = null;
+		try {
+			sc = new Scanner(inputFile);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // creates a new scanner that reads the input file
+		String CurrentLine = ""; 
+		while (!CurrentLine.contentEquals("DIMENSION:")) { // while the string does not equal DIMENSION 
+			 CurrentLine = sc.next();// Set the string to whatever is in the next line 
+		}
+		
+			 nv = sc.nextInt(); // once the word dimension is found it moves onto this line in which it stores the next int as NV 
+			 graph = new SimpleWeightedGraph<Integer, DefaultWeightedEdge>(DefaultWeightedEdge.class); 
+		
+//		while (sc.hasNextLine()) { // while there is another line in file
+//			int v = sc.nextInt(); // the following int in the file will be a vertice of the first edge
+//			int v2 = sc.nextInt(); // second vertice of the edge in first row
+//			int w = sc.nextInt(); // the weight of the first edge in the first row of data
+			for (int v = 1; v <= nv; v++) { // if the number of vertices is still at or below minimum add the vertice to the graph 
+					graph.addVertex(v); // add each vertex 1 through NV 
+				}
+			
+			while (sc.hasNext("EOF")!= true) { // while the next line is not End Of File 
+				if (sc.hasNextInt()) { // if the next item in the scanner is an int 
+					int V1 = sc.nextInt() ; // first integer in line is V1 
+					int V2 = sc.nextInt() ; // followed by V2 
+					int W  = sc.nextInt() ; // followed by Weight 
+					//graph.getEdgeWeight(graph.getEdge(V1, V2)) ; // weight of the edge between Vertice 1 and Vertice 2 of current line 
+					graph.addEdge(V1,V2); // add edge from V1 to V2 
+					graph.setEdgeWeight(graph.getEdge(V1,V2), W); //add the weight to that edge with W 
+				}
+				else {
+					sc.next();  //if its not an int move onto the next line 
+				}
+			}
+		}
+	
+	public static void mst() {
+			KruskalMinimumSpanningTree <Integer, DefaultWeightedEdge> tree =
+				new KruskalMinimumSpanningTree<Integer, DefaultWeightedEdge>(graph) ;	//Create a minimum spanning tree with the graph created 
+			mstEdges = tree.getEdgeSet() ; 			// put all the edges in the new MST into a set 
+	}
+	
+
+	public static void depthFirstOrder() {
+		 SimpleGraph<Integer, DefaultEdge> tree = new SimpleGraph<Integer, DefaultEdge> (DefaultEdge.class);  // intitiaize a graph 
+		 for(int i = 1; i <= nv; i++){
+			 tree.addVertex(i);
+		}				//add each vertex to the tree
+		 
+		 for(DefaultWeightedEdge edge:mstEdges) {
+			 tree.addEdge(tree.getEdgeSource(edge), tree.getEdgeTarget(edge)) ; // adds the edges to the tree 
+		 }
+		 tour = new int[nv] ; // intitialize array of size vertices because every vertex will be hit 
+		 DepthFirstIterator<Integer, DefaultEdge> DFI = new DepthFirstIterator<Integer, DefaultEdge>(tree); // uses the imported depthfirstiterator on the tree  
+		int i = 0 ; 
+		while (DFI.hasNext()){
+			tour[i++] = DFI.next() ; //stores each vertex hit by the iterator in the array then advances 
+		}
+		
+		 
+	}
+
+	public static void writeTour(String outputPath) throws FileNotFoundException {
+	      File outputFile = new File(outputPath); // first item in array is the input 
+	      PrintWriter w = new PrintWriter(outputFile);
+	      w.print("NAME: " + outputPath);
+	      w.print("\nTYPE:tour");
+	      w.print("\nDIMENSION: "+ nv);
+	      w.print("\nTOUR_SECTION");
+	      for(int i = 0; i < tour.length; i++) {
+	    	  w.print("\n"+tour[i]);
+	      }
+	      w.print("\n-1");
+	      w.close(); 
+	     
+	}
+
+}
